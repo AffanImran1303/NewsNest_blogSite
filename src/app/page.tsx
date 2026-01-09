@@ -4,8 +4,20 @@ import prisma from "@/lib/prisma";
 import Link from "next/link";
 import Footer from "@/components/layout/footer";
 
+// 1. Define the Post interface to satisfy TypeScript
+interface Post {
+  id: string;
+  title: string;
+  slug: string;
+  category: string;
+  content: string;
+  image: string;
+  date: Date;
+}
+
 export default async function Home() {
-  const posts = await prisma.post.findMany({
+  // 2. Fetch and type the result
+  const posts: Post[] = await prisma.post.findMany({
     where: { published: true },
     orderBy: { date: 'desc' },
     // Manually select columns that exist to avoid the "excerpt" error
@@ -14,7 +26,7 @@ export default async function Home() {
       title: true,
       slug: true,
       category: true,
-      content: true, // Use this for the excerpt for now
+      content: true,
       image: true,
       date: true,
     }
@@ -61,7 +73,8 @@ export default async function Home() {
           <div>
             <h3 className="text-2xl font-bold mb-6">Other featured posts</h3>
             <div className="flex flex-col gap-6">
-              {sidePosts.map((post) => (
+              {/* 3. Added the explicit : Post type here */}
+              {sidePosts.map((post: Post) => (
                 <Link key={post.id} href={`/blog/${post.slug}`} className="group flex items-center gap-4 border-b border-zinc-100 dark:border-zinc-800 pb-6 last:border-0">
                   <div className="h-20 w-24 shrink-0 overflow-hidden rounded-xl bg-zinc-100">
                     <img src={post.image} className="h-full w-full object-cover transition-transform group-hover:scale-110" />
@@ -84,7 +97,8 @@ export default async function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {recentPosts.map((post) => (
+            {/* 4. Added the explicit : Post type here too */}
+            {recentPosts.map((post: Post) => (
               <BlogCard 
                 key={post.id}
                 id={post.slug}
@@ -98,7 +112,7 @@ export default async function Home() {
           </div>
         </section>
       </div>
-      {/* <Footer/> */}
+      <Footer />
     </main>
   );
 }
