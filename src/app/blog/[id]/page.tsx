@@ -6,7 +6,6 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { PlayCircle } from "lucide-react";
 
-// 1. Define the Interface so TypeScript knows what a "Post" looks like
 interface Post {
   id: string;
   title: string;
@@ -20,7 +19,7 @@ interface Post {
 export default async function BlogPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  // 2. Fetch Main Post
+  // 1. Fetch Main Post with explicit selection
   const post = await prisma.post.findUnique({
     where: { slug: id },
     select: {
@@ -35,7 +34,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
 
   if (!post) return notFound();
 
-  // 3. Fetch Related Posts and explicitly type the result
   const relatedPosts: Post[] = await prisma.post.findMany({
     where: {
       category: post.category,
@@ -44,15 +42,16 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
     },
     take: 4,
     orderBy: { date: 'desc' },
+    // WE MUST ADD THIS SELECT BLOCK HERE TOO
     select: {
       id: true,
       title: true,
       slug: true,
       image: true,
       category: true,
+      excerpt:true,
     }
   });
-
   return (
     <main className="min-h-screen">
       <Navbar />
@@ -66,12 +65,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
               {post.title}
             </h1>
             
+            {/* 1. EXCERPT (Lead Paragraph before image) */}
             <div className="mb-10">
               <p className="text-2xl font-bold text-zinc-800 dark:text-zinc-200 leading-snug">
                 {post.excerpt || "Database excerpt is empty or null"}
               </p>
             </div>
 
+            {/* 2. MAIN IMAGE */}
             <div className="rounded-3xl overflow-hidden mb-12 shadow-xl">
               <img 
                 src={post.image} 
@@ -80,6 +81,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
               />
             </div>
 
+            {/* 3. MAIN CONTENT (Long story after image) */}
             <div className="prose prose-zinc dark:prose-invert max-w-none">
               <div className="text-lg text-zinc-700 dark:text-zinc-400 leading-loose whitespace-pre-wrap">
                 {post.content}
@@ -94,7 +96,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
             </h2>
 
             <div className="space-y-10">
-              {/* 4. Typed the 'related' parameter here to fix the Vercel error */}
               {relatedPosts.map((related: Post) => (
                 <Link key={related.id} href={`/blog/${related.slug}`} className="group block">
                   <div className="relative rounded-2xl overflow-hidden mb-4">
@@ -118,7 +119,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
                 </Link>
               ))}
             </div>
-
             {/* Sidebar Footer */}
             <div className="mt-16 pt-8 border-t border-zinc-200 dark:border-zinc-800">
               <h3 className="text-sm font-black uppercase mb-4 tracking-widest text-zinc-900 dark:text-zinc-100">
@@ -138,11 +138,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
               </div>
             </div>
           </aside>
-        </div>
-      </div>
-    </main>
-  );
-}
         </div>
       </div>
     </main>
