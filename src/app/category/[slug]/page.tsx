@@ -2,15 +2,25 @@ import { Navbar } from "@/components/layout/navbar";
 import { BlogCard } from "@/components/blog/blog-card";
 import prisma from "@/lib/prisma";
 
+// 1. Define the specific type for posts in the category view
+interface CategoryPost {
+  id: string;
+  title: string;
+  slug: string;
+  category: string;
+  content: string;
+  image: string;
+  date: Date;
+}
+
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  
+  const { slug } = await params;  
   // 1. Format the slug back to match database strings
   // Example: "law-and-order" becomes "law and order"
   const formattedCategory = slug.replace(/-/g, ' ');
 
-  // 2. Fetch real posts from Supabase based on category
-  const filteredPosts = await prisma.post.findMany({
+  // 2. Fetch and type the result
+  const filteredPosts: CategoryPost[] = await prisma.post.findMany({
     where: {
       category: {
         equals: formattedCategory,
@@ -49,7 +59,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
 
         {filteredPosts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {filteredPosts.map((post) => (
+            {/* 3. Explicitly type the post parameter in the map function */}
+            {filteredPosts.map((post: CategoryPost) => (
               <BlogCard 
                 key={post.id}
                 id={post.slug}
@@ -69,7 +80,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
           <div className="py-32 text-center rounded-3xl border-2 border-dashed border-zinc-100 dark:border-zinc-900">
             <div className="max-w-xs mx-auto">
                <p className="text-zinc-500 font-medium">
-                No stories found in <span className="text-[#3D3B8E] font-bold">"{formattedCategory}"</span> yet.
+                 No stories found in <span className="text-[#3D3B8E] font-bold">"{formattedCategory}"</span> yet.
               </p>
               <p className="text-sm text-zinc-400 mt-2">Check back later for fresh updates.</p>
             </div>
